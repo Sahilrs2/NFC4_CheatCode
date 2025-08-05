@@ -1,18 +1,43 @@
 import React, { useState } from "react";
+import { aiMentorAPI } from "../services/api";
 
 export default function Chatbot() {
   const [messages, setMessages] = useState([
     {
       sender: "bot",
-      text: "Based on your skills assessment, I recommend focusing on digital marketing. You have strong communication skills and showed interest in social media during your profile setup.",
+      text: "Hello! I'm your AI Career Mentor. I'm here to help you with career guidance, skill development advice, and answer any questions you might have about your professional journey. How can I assist you today?",
     },
   ]);
   const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSend = () => {
-    if (!input.trim()) return;
-    setMessages([...messages, { sender: "user", text: input }]);
+  const handleSend = async () => {
+    if (!input.trim() || isLoading) return;
+    
+    const userMessage = input.trim();
     setInput("");
+    
+    // Add user message to chat
+    setMessages(prev => [...prev, { sender: "user", text: userMessage }]);
+    
+    setIsLoading(true);
+    
+    try {
+      const response = await aiMentorAPI.getResponse(userMessage);
+      const aiResponse = response.data.response;
+      
+      // Add AI response to chat
+      setMessages(prev => [...prev, { sender: "bot", text: aiResponse }]);
+    } catch (error) {
+      console.error("Error getting AI response:", error);
+      // Add error message to chat
+      setMessages(prev => [...prev, { 
+        sender: "bot", 
+        text: "I apologize, but I'm having trouble connecting right now. Please try again in a moment." 
+      }]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -38,6 +63,14 @@ export default function Chatbot() {
             {msg.text}
           </div>
         ))}
+        {isLoading && (
+          <div className="max-w-sm px-5 py-3 rounded-lg text-base bg-blue-100 text-blue-800 self-start">
+            <div className="flex items-center space-x-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-800"></div>
+              <span>AI is thinking...</span>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="flex p-6 border-t border-gray-200 bg-white rounded-b-lg">
@@ -50,16 +83,22 @@ export default function Chatbot() {
             fontSize: '16px',
             border: '2px solid black'
           }}
-          placeholder="Type a message..."
+          placeholder={isLoading ? "Please wait..." : "Type a message..."}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSend()}
+          disabled={isLoading}
         />
         <button
           onClick={handleSend}
-          className="bg-blue-600 text-white px-6 py-3 rounded-r-lg hover:bg-blue-700 transition-colors text-base font-medium"
+          disabled={isLoading}
+          className={`px-6 py-3 rounded-r-lg transition-colors text-base font-medium ${
+            isLoading 
+              ? 'bg-gray-400 text-gray-200 cursor-not-allowed' 
+              : 'bg-blue-600 text-white hover:bg-blue-700'
+          }`}
         >
-          Send
+          {isLoading ? 'Sending...' : 'Send'}
         </button>
       </div>
     </div>

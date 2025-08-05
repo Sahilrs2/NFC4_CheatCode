@@ -9,6 +9,9 @@ from rest_framework.permissions import AllowAny
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import RegisterUserSerializer
+from rest_framework import status
+from rest_framework.views import APIView
+from .utils.gemini_utils import Genai_response
 
 class UserProfileViewSet(viewsets.ModelViewSet):
     queryset = User_Profile.objects.all()
@@ -112,3 +115,23 @@ def login_user(request):
             'error': 'Invalid credentials'
         }, status=status.HTTP_401_UNAUTHORIZED)
     
+class GeminiCareerMentorAPIView(APIView):
+    def post(self, request):
+        try:
+            # Ensure data is parsed correctly
+            user_question = request.data.get("question")
+
+            if not user_question:
+                return Response(
+                    {"error": "Missing 'question' in request body."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            ai_response = Genai_response(user_question)
+            return Response({"response": ai_response}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(
+                {"error": f"Something went wrong: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

@@ -32,6 +32,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+GEMINI_API_KEY = os.getenv('api_key')
 
 # Application definition
 

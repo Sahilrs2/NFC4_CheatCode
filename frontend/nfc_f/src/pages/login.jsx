@@ -19,7 +19,7 @@ const Login = () => {
     setError('');
     
     try {
-      const result = await login({ email, password });
+      const result = await login({ username: email, password });
       if (result.success) {
         navigate('/dashboard');
       } else {

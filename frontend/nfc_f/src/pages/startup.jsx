@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 
 const roles = [
-  { label: "Learner", emoji: "👤" },
+  { label: "LEARNER", emoji: "👤" },
   { label: "Mentor", emoji: "🎓" },
   { label: "Employer", emoji: "💼" },
   { label: "NGO", emoji: "🤝" }

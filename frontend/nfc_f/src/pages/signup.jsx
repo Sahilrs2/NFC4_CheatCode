@@ -1,33 +1,184 @@
-import React from 'react';
-import './App.css';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import translations from "../assets/language";
 
 export default function Signup() {
+
+  const [language, setLanguage] = useState("English");
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    gender: "",
+    password: "",
+    photo: null
+  });
+  const [selectedRole, setSelectedRole] = useState("");
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const storedRole = localStorage.getItem("selectedRole");
+    if (storedRole) {
+      setSelectedRole(storedRole);
+    } else {
+      navigate("/roles"); // fallback if user opens directly
+    }
+  }, [navigate]);
+
+  const t = translations[language];
+
+  const handleChange = (e) => {
+    const { name, value, files } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: files ? files[0] : value
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    alert("Form submitted!");
+  };
+
   return (
-    <div className="signup-container">
-      <h1>👋 Welcome!</h1>
+    <div style={styles.container}>
+      <h2>{t.submit}</h2>
+      <div style={styles.languageToggle}>
+        <label style={{ marginRight: "8px" }}>🌐 Language:</label>
+        <select
+          value={language}
+          onChange={(e) => setLanguage(e.target.value)}
+          style={styles.select}
+        >
+          {Object.keys(translations).map((lang) => (
+            <option key={lang} value={lang}>
+              {lang}
+            </option>
+          ))}
+        </select>
+      </div>
 
-      <select className="language-select">
-        <option>Choose Language</option>
-        <option>English</option>
-        <option>हिन्दी</option>
-        <option>मराठी</option>
-        <option>বাংলা</option>
-      </select>
+      <form onSubmit={handleSubmit} style={styles.form}>
+        <input
+          placeholder={t.name}
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+          required
+          style={styles.input}
+        />
+        <input
+          placeholder={t.email}
+          name="email"
+          value={formData.email}
+          onChange={handleChange}
+          required
+          style={styles.input}
+        />
+        <input
+          placeholder={t.phone}
+          name="phone"
+          value={formData.phone}
+          onChange={handleChange}
+          required
+          style={styles.input}
+        />
+        <input
+          placeholder={t.address}
+          name="address"
+          value={formData.address}
+          onChange={handleChange}
+          required
+          style={styles.input}
+        />
+        <select
+          name="gender"
+          value={formData.gender}
+          onChange={handleChange}
+          required
+          style={styles.input}
+        >
+          <option value="">{t.gender}</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+          <option value="other">Other</option>
+        </select>
+        <input
+          placeholder={t.password}
+          type="password"
+          name="password"
+          value={formData.password}
+          onChange={handleChange}
+          required
+          style={styles.input}
+        />
 
-      <label>Full Name</label>
-      <input type="text" placeholder="Enter your name" />
+        <div style={styles.readonlyRole}>
+          <strong>{t.role}:</strong> {selectedRole}
+        </div>
 
-      <label>Phone Number</label>
-      <input type="tel" placeholder="Enter phone number" />
-
-      <label>Enter OTP</label>
-      <input type="number" placeholder="OTP" />
-
-      <button>Sign Up</button>
-
-      <button className="help-button">I Need Help</button>
-
-      <span className="login-link">Already registered? Login</span>
+        <input
+          type="file"
+          name="photo"
+          accept="image/*"
+          onChange={handleChange}
+          style={styles.input}
+        />
+        <button  type="submit" onClick={() => navigate('/dashboard') } style={styles.submitBtn}>
+          {t.submit}
+        </button>
+        <p>
+          {t.already} <a href="/login">Login</a>
+        </p>
+      </form>
     </div>
   );
 }
+
+const styles = {
+  container: {
+    maxWidth: "500px",
+    margin: "2rem auto",
+    padding: "2rem",
+    background: "#fff",
+    borderRadius: "12px",
+    boxShadow: "0 0 10px rgba(0,0,0,0.1)"
+  },
+  form: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "1rem"
+  },
+  input: {
+    padding: "0.8rem",
+    borderRadius: "6px",
+    border: "1px solid #ccc",
+    fontSize: "1rem"
+  },
+  submitBtn: {
+    background: "#007BFF",
+    color: "#fff",
+    border: "none",
+    padding: "0.9rem",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontSize: "1rem"
+  },
+  languageToggle: {
+    marginBottom: "1rem",
+    display: "flex",
+    alignItems: "center"
+  },
+  select: {
+    padding: "0.5rem",
+    fontSize: "1rem"
+  },
+  readonlyRole: {
+    fontSize: "1rem",
+    padding: "0.8rem",
+    background: "#f1f1f1",
+    borderRadius: "6px"
+  }
+};

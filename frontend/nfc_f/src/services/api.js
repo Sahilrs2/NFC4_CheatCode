@@ -126,4 +126,13 @@ export const aiMentorAPI = {
   getResponse: (question) => api.post('/ai-mentor/', { question }),
 };
 
+// Quiz API calls
+export const quizAPI = {
+  generateQuiz: (data) => api.post('/generate-quiz/', data),
+  submitQuiz: (quizId, answers) => api.post(`/submit-quiz/${quizId}/`, { answers }),
+  getQuizzes: () => api.get('/quizzes/'),
+  getQuiz: (id) => api.get(`/quizzes/${id}/`),
+  getQuizAttempts: () => api.get('/quiz-attempts/'),
+};
+
 export default api; 

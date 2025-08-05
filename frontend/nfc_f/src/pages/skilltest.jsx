@@ -1,50 +1,114 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { quizAPI } from '../services/api';
 import './SkillTest.css';
 
-const questionDB = {
-  javascript: [
-    { id: 1, question: 'What is a closure in JavaScript?', options: ['A function bundled with lexical scope', 'A variable', 'An object', 'A DOM element'], answer: 0 },
-    { id: 2, question: 'Which method converts JSON to an object?', options: ['JSON.parse()', 'JSON.stringify()', 'JSON.object()', 'JSON.convert()'], answer: 0 },
-  ],
-  reactjs: [
-    { id: 3, question: 'Which hook is used for state management?', options: ['useState', 'useEffect', 'useContext', 'useReducer'], answer: 0 },
-    { id: 4, question: 'JSX stands for?', options: ['JavaScript XML', 'JavaScript and XHTML', 'Java Syntax Extension', 'JavaScript Extension'], answer: 0 },
-  ],
-  python: [
-    { id: 5, question: 'What is the output of print(2**3)?', options: ['6', '8', '9', '5'], answer: 1 },
-    { id: 6, question: 'Which keyword defines a function in Python?', options: ['func', 'function', 'def', 'fun'], answer: 2 },
-  ],
-  webdevelopment: [
-    { id: 7, question: 'HTML stands for?', options: ['HyperText Markup Language', 'Hyperlinks Text Mark Language', 'Home Tool Markup Language', 'Hyperlinking Text Marking Language'], answer: 0 },
-    { id: 8, question: 'CSS is used for?', options: ['Content', 'Styling', 'Programming', 'Structuring'], answer: 1 },
-  ],
-  appdevelopment: [
-    { id: 9, question: 'Android apps are primarily built with?', options: ['Java/Kotlin', 'Swift', 'Python', 'Ruby'], answer: 0 },
-    { id: 10, question: 'React Native is used for?', options: ['Web apps', 'Mobile apps', 'Desktop apps', 'Games'], answer: 1 },
-  ]
+// Map user skills to quiz categories
+const skillToCategoryMap = {
+  javascript: 'PROGRAMMING',
+  reactjs: 'PROGRAMMING',
+  python: 'PROGRAMMING',
+  webdevelopment: 'TECHNICAL',
+  appdevelopment: 'TECHNICAL',
+  java: 'PROGRAMMING',
+  cpp: 'PROGRAMMING',
+  csharp: 'PROGRAMMING',
+  php: 'PROGRAMMING',
+  ruby: 'PROGRAMMING',
+  swift: 'PROGRAMMING',
+  kotlin: 'PROGRAMMING',
+  html: 'TECHNICAL',
+  css: 'TECHNICAL',
+  sql: 'TECHNICAL',
+  mongodb: 'TECHNICAL',
+  nodejs: 'PROGRAMMING',
+  angular: 'PROGRAMMING',
+  vue: 'PROGRAMMING',
+  django: 'PROGRAMMING',
+  flask: 'PROGRAMMING',
+  laravel: 'PROGRAMMING',
+  spring: 'PROGRAMMING',
+  dotnet: 'PROGRAMMING',
+  android: 'TECHNICAL',
+  ios: 'TECHNICAL',
+  flutter: 'TECHNICAL',
+  reactnative: 'TECHNICAL',
+  xamarin: 'TECHNICAL',
+  aws: 'TECHNICAL',
+  azure: 'TECHNICAL',
+  gcp: 'TECHNICAL',
+  docker: 'TECHNICAL',
+  kubernetes: 'TECHNICAL',
+  git: 'TECHNICAL',
+  linux: 'TECHNICAL',
+  networking: 'TECHNICAL',
+  cybersecurity: 'TECHNICAL',
+  machinelearning: 'DATA_SCIENCE',
+  ai: 'DATA_SCIENCE',
+  datascience: 'DATA_SCIENCE',
+  statistics: 'DATA_SCIENCE',
+  excel: 'BUSINESS',
+  powerpoint: 'BUSINESS',
+  word: 'BUSINESS',
+  photoshop: 'DESIGN',
+  illustrator: 'DESIGN',
+  figma: 'DESIGN',
+  sketch: 'DESIGN',
+  canva: 'DESIGN',
+  marketing: 'DIGITAL_MARKETING',
+  seo: 'DIGITAL_MARKETING',
+  socialmedia: 'DIGITAL_MARKETING',
+  contentwriting: 'DIGITAL_MARKETING',
+  emailmarketing: 'DIGITAL_MARKETING',
+  leadership: 'SOFT_SKILLS',
+  communication: 'SOFT_SKILLS',
+  teamwork: 'SOFT_SKILLS',
+  problemsolving: 'SOFT_SKILLS',
+  timemanagement: 'SOFT_SKILLS',
+  negotiation: 'SOFT_SKILLS',
+  publicspeaking: 'SOFT_SKILLS',
+  projectmanagement: 'BUSINESS',
+  entrepreneurship: 'BUSINESS',
+  finance: 'BUSINESS',
+  accounting: 'BUSINESS',
+  sales: 'BUSINESS',
+  customer_service: 'SOFT_SKILLS',
+  resume: 'CAREER_GUIDANCE',
+  interview: 'CAREER_GUIDANCE',
+  networking: 'CAREER_GUIDANCE',
+  career_planning: 'CAREER_GUIDANCE'
 };
 
-function getQuestionsFromSkills(skills) {
-  const skillKeys = Object.keys(questionDB);
-  if (!skills || skills.length === 0) return [];
-
+function getCategoryFromSkills(skills) {
+  if (!skills || skills.length === 0) return 'GENERAL_KNOWLEDGE';
+  
   const userSkills = skills.toLowerCase();
-  let collected = [];
-  skillKeys.forEach(skill => {
-    if (userSkills.includes(skill)) {
-      collected = collected.concat(questionDB[skill]);
+  const skillWords = userSkills.split(/[,\s]+/);
+  
+  for (const skill of skillWords) {
+    if (skillToCategoryMap[skill]) {
+      return skillToCategoryMap[skill];
     }
-  });
-  while (collected.length < 20) {
-    skillKeys.forEach(skill => {
-      if (collected.length < 20) {
-        collected = collected.concat(questionDB[skill].slice(0, 1));
-      }
-    });
   }
-  // Add question index suffix for key uniqueness
-  return collected.slice(0, 20).map((q, i) => ({ ...q, key: i + 1 }));
+  
+  // Default categories based on common skill patterns
+  if (userSkills.includes('programming') || userSkills.includes('coding') || userSkills.includes('developer')) {
+    return 'PROGRAMMING';
+  }
+  if (userSkills.includes('design') || userSkills.includes('creative')) {
+    return 'DESIGN';
+  }
+  if (userSkills.includes('marketing') || userSkills.includes('advertising')) {
+    return 'DIGITAL_MARKETING';
+  }
+  if (userSkills.includes('business') || userSkills.includes('management')) {
+    return 'BUSINESS';
+  }
+  if (userSkills.includes('data') || userSkills.includes('analytics')) {
+    return 'DATA_SCIENCE';
+  }
+  
+  return 'GENERAL_KNOWLEDGE';
 }
 
 const SkillTest = () => {
@@ -56,6 +120,9 @@ const SkillTest = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState({});
   const [timeLeft, setTimeLeft] = useState(300); // 5 mins
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [quizId, setQuizId] = useState(null);
 
   useEffect(() => {
     if (!skills) {
@@ -63,9 +130,48 @@ const SkillTest = () => {
       navigate('/onboarding');
       return;
     }
-    const qs = getQuestionsFromSkills(skills);
-    setQuestions(qs);
+    
+    generateQuizFromSkills();
   }, [skills, navigate]);
+
+  const generateQuizFromSkills = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const category = getCategoryFromSkills(skills);
+      const topic = skills; // Use skills as the topic for more specific questions
+      
+      const response = await quizAPI.generateQuiz({
+        topic: topic,
+        category: category,
+        difficulty: 'MEDIUM',
+        num_questions: 10,
+        time_limit: 5, // 5 minutes
+        passing_score: 70
+      });
+      
+      const quizData = response.data.quiz;
+      setQuizId(quizData.id);
+      
+      // Transform AI-generated questions to match the component's expected format
+      const transformedQuestions = quizData.questions.map((q, index) => ({
+        id: index + 1,
+        question: q.question,
+        options: [q.options.A, q.options.B, q.options.C, q.options.D],
+        correct_answer: ['A', 'B', 'C', 'D'].indexOf(q.correct_answer),
+        explanation: q.explanation,
+        key: index + 1
+      }));
+      
+      setQuestions(transformedQuestions);
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error generating quiz:', error);
+      setError('Failed to generate quiz. Please try again.');
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (timeLeft <= 0) {
@@ -78,18 +184,90 @@ const SkillTest = () => {
     return () => clearInterval(timerId);
   }, [timeLeft]);
 
-  const submitTest = () => {
-    alert('Time is up or test submitted! Thank you.');
-    navigate('/'); // Change to results page if you wish
+  const submitTest = async () => {
+    try {
+      if (!quizId) {
+        alert('Quiz not found. Please try again.');
+        return;
+      }
+
+      // Transform answers to match API format (question index as key, answer letter as value)
+      const apiAnswers = {};
+      Object.keys(answers).forEach(questionId => {
+        const questionIndex = parseInt(questionId) - 1; // Convert to 0-based index
+        const answerIndex = answers[questionId];
+        const answerLetter = ['A', 'B', 'C', 'D'][answerIndex];
+        apiAnswers[questionIndex] = answerLetter;
+      });
+
+      const response = await quizAPI.submitQuiz(quizId, apiAnswers);
+      const result = response.data;
+      
+      // Show results
+      const message = `Quiz completed!\n\nScore: ${result.score}%\nCorrect Answers: ${result.correct_answers}/${result.total_questions}\nStatus: ${result.passed ? 'PASSED' : 'FAILED'}`;
+      alert(message);
+      
+      // Navigate to results page or dashboard
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Error submitting quiz:', error);
+      alert('Failed to submit quiz. Please try again.');
+    }
   };
 
   const handleAnswerSelect = (qId, optionIndex) => {
     setAnswers({ ...answers, [qId]: optionIndex });
   };
 
+  if (isLoading) return (
+    <div className="skilltest-bg">
+      <div className="skilltest-centre-box">
+        <div style={{ textAlign: 'center', padding: '20px' }}>
+          <div style={{ fontSize: '18px', marginBottom: '10px' }}>Generating AI Quiz...</div>
+          <div style={{ fontSize: '14px', color: '#666' }}>Creating personalized questions based on your skills</div>
+          <div style={{ marginTop: '20px' }}>
+            <div style={{ 
+              width: '40px', 
+              height: '40px', 
+              border: '4px solid #f3f3f3', 
+              borderTop: '4px solid #3498db', 
+              borderRadius: '50%', 
+              animation: 'spin 1s linear infinite',
+              margin: '0 auto'
+            }}></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (error) return (
+    <div className="skilltest-bg">
+      <div className="skilltest-centre-box">
+        <div style={{ textAlign: 'center', padding: '20px' }}>
+          <div style={{ fontSize: '18px', marginBottom: '10px', color: '#e74c3c' }}>Error</div>
+          <div style={{ fontSize: '14px', color: '#666', marginBottom: '20px' }}>{error}</div>
+          <button 
+            onClick={generateQuizFromSkills}
+            style={{
+              padding: '10px 20px',
+              backgroundColor: '#3498db',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: 'pointer'
+            }}
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   if (!questions.length) return (
     <div className="skilltest-bg">
-      <div className="skilltest-centre-box">Loading questions...</div>
+      <div className="skilltest-centre-box">No questions available.</div>
     </div>
   );
 

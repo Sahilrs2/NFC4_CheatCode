@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { courseAPI, userAPI, mentorAPI, jobAPI } from '../services/api';
 import { 
   User, 
   BookOpen, 
@@ -19,12 +21,14 @@ import {
   Award,
   Calendar,
   Phone,
-  Home
+  Home,
+  LogOut
 } from 'lucide-react';
 
 export default function Dashboard() {
+  const { logout } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
-  const [user] = useState({
+  const [user, setUser] = useState({
     name: 'Priya Sharma',
     location: 'Mumbai, Maharashtra',
     skillLevel: 'Beginner',
@@ -33,6 +37,30 @@ export default function Dashboard() {
     jobApplications: 12,
     profileCompletion: 75
   });
+  const [courses, setCourses] = useState([]);
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch courses, jobs, and other data from API
+        const [coursesData, jobsData] = await Promise.all([
+          courseAPI.getCourses(),
+          jobAPI.getJobs()
+        ]);
+        
+        setCourses(coursesData.data || []);
+        setJobs(jobsData.data || []);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const [notifications] = useState([
     { id: 1, type: 'mentor', message: 'New message from your mentor Rajesh Kumar', time: '2 hours ago' },
@@ -196,6 +224,13 @@ export default function Dashboard() {
                   <p className="font-medium text-gray-900">{user.name}</p>
                   <p className="text-gray-600">{user.location}</p>
                 </div>
+                <button 
+                  onClick={logout}
+                  className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                  title="Logout"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
               </div>
             </div>
           </div>

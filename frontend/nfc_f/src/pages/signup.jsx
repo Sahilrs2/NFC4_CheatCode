@@ -152,8 +152,9 @@ export default function Signup() {
           onChange={handleChange}
           style={styles.input}
         />
-        <button  type="submit" onClick={() => navigate('/dashboard') } style={styles.submitBtn}>
-          {t.submit}
+        {error && <div style={{ color: 'red', marginBottom: '1rem' }}>{error}</div>}
+        <button type="submit" disabled={loading} style={styles.submitBtn}>
+          {loading ? 'Creating Account...' : t.submit}
         </button>
         <p>
           {t.already} <a href="/login">Login</a>

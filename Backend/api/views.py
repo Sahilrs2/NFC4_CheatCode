@@ -1,6 +1,10 @@
 from rest_framework import viewsets
 from .models import *
 from .serializers import *
+from rest_framework import generics, status
+from django.contrib.auth.models import User
+from rest_framework.response import Response
+from .serializers import RegisterUserSerializer
 
 class UserProfileViewSet(viewsets.ModelViewSet):
     queryset = User_Profile.objects.all()
@@ -49,3 +53,15 @@ class CustomerSupportViewSet(viewsets.ModelViewSet):
 class SystemLogViewSet(viewsets.ModelViewSet):
     queryset = system_logs.objects.all()
     serializer_class = SystemLogsSerializer
+
+class RegisterUserView(generics.CreateAPIView):
+    serializer_class = RegisterUserSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            return Response({'message': 'User registered successfully'}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def patch()

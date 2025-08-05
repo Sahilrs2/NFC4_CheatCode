@@ -51,15 +51,25 @@ export default function Signup() {
         username: formData.email,
         email: formData.email,
         password: formData.password,
-        first_name: formData.name,
-        // Add other fields as needed based on your Django model
+        role: selectedRole.toLowerCase(),
+        phone: formData.phone,
+        gender: formData.gender,
+        location: formData.address,
+        language_preference: 'English', // Default language
+        age: 25 // Default age, you can add age field to form if needed
       };
       
       const result = await register(userData);
       if (result.success) {
         navigate('/dashboard');
       } else {
-        setError(result.error);
+        // Handle validation errors
+        if (typeof result.error === 'object') {
+          const errorMessages = Object.values(result.error).flat().join(', ');
+          setError(errorMessages);
+        } else {
+          setError(result.error);
+        }
       }
     } catch (err) {
       setError('An unexpected error occurred');

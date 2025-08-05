@@ -29,19 +29,26 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       const response = await authAPI.login(credentials);
-      const { access, refresh } = response.data;
       
-      localStorage.setItem('access_token', access);
-      localStorage.setItem('refresh_token', refresh);
-      
-      setIsAuthenticated(true);
-      // You can fetch user profile here
-      return { success: true };
+      if (response.data.success) {
+        const { access, refresh } = response.data.tokens;
+        
+        localStorage.setItem('access_token', access);
+        localStorage.setItem('refresh_token', refresh);
+        
+        setIsAuthenticated(true);
+        return { success: true };
+      } else {
+        return { 
+          success: false, 
+          error: response.data.error || 'Login failed' 
+        };
+      }
     } catch (error) {
       console.error('Login error:', error);
       return { 
         success: false, 
-        error: error.response?.data?.detail || 'Login failed' 
+        error: error.response?.data?.error || error.response?.data?.detail || 'Login failed' 
       };
     }
   };
@@ -49,12 +56,27 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       const response = await authAPI.register(userData);
-      return { success: true, data: response.data };
+      
+      if (response.data.success) {
+        // If registration includes tokens, store them
+        if (response.data.tokens) {
+          const { access, refresh } = response.data.tokens;
+          localStorage.setItem('access_token', access);
+          localStorage.setItem('refresh_token', refresh);
+          setIsAuthenticated(true);
+        }
+        return { success: true, data: response.data };
+      } else {
+        return { 
+          success: false, 
+          error: response.data.errors || 'Registration failed' 
+        };
+      }
     } catch (error) {
       console.error('Registration error:', error);
       return { 
         success: false, 
-        error: error.response?.data || 'Registration failed' 
+        error: error.response?.data?.errors || error.response?.data?.error || 'Registration failed' 
       };
     }
   };

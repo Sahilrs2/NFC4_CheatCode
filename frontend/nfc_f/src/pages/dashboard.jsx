@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { courseAPI, userAPI, mentorAPI, jobAPI } from '../services/api';
+
 import { 
   User, 
   BookOpen, 
@@ -24,8 +25,14 @@ import {
   Home,
   LogOut
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
+  const navigate=useNavigate()
+    const [activeTab, setActiveTab] = useState('overview');
+  const [user] = useState({
+    name: 'Priya Sharma',
+    location: 'Mumbai, Maharashtra',
   const { logout } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [user, setUser] = useState({
@@ -190,7 +197,7 @@ export default function Dashboard() {
         </p>
         <p className="text-xs text-gray-500">AI Advisor • Just now</p>
       </div>
-      <button className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">
+      <button onClick={()=>{navigate('/chatbot')}} className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">
         Chat with Advisor
       </button>
     </div>
@@ -516,7 +523,7 @@ export default function Dashboard() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <button className="flex flex-col items-center gap-2 p-4 border border-gray-200 rounded-lg hover:border-blue-200 hover:bg-blue-50 transition-colors">
               <Award className="w-6 h-6 text-blue-500" />
-              <span className="text-sm font-medium text-gray-700">Take Skills Test</span>
+              <span onClick={()=>{navigate('/skilltest')}} className="text-sm font-medium text-gray-700">Take Skills Test</span>
             </button>
             <button className="flex flex-col items-center gap-2 p-4 border border-gray-200 rounded-lg hover:border-green-200 hover:bg-green-50 transition-colors">
               <Users className="w-6 h-6 text-green-500" />

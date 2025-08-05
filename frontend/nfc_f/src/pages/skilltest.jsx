@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { quizAPI } from '../services/api';
+import { quizAPI, userAPI } from '../services/api';
 import './SkillTest.css';
 
 // Map user skills to quiz categories
@@ -115,7 +115,7 @@ const SkillTest = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const skills = location.state?.skills || '';
+  const [skills, setSkills] = useState(location.state?.skills || '');
   const [questions, setQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState({});
@@ -126,21 +126,50 @@ const SkillTest = () => {
 
   useEffect(() => {
     if (!skills) {
-      alert("No skills data found. Redirecting to onboarding.");
-      navigate('/onboarding');
+      // Try to get skills from user profile if not passed in navigation
+      fetchUserSkills();
       return;
     }
     
     generateQuizFromSkills();
   }, [skills, navigate]);
 
-  const generateQuizFromSkills = async () => {
+  const fetchUserSkills = async () => {
+    try {
+      setIsLoading(true);
+      const response = await userAPI.getCurrentUserProfile();
+      const userProfile = response.data;
+      
+      if (userProfile && userProfile.length > 0) {
+        const profile = userProfile[0];
+        const userSkills = profile.skill_set || '';
+        
+        if (userSkills) {
+          // Update the skills state and generate quiz
+          setSkills(userSkills);
+          generateQuizFromSkills(userSkills);
+        } else {
+          setError('No skills found in your profile. Please complete your profile first.');
+          setIsLoading(false);
+        }
+      } else {
+        setError('Unable to load your profile. Please try again.');
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.error('Error fetching user skills:', error);
+      setError('Failed to load your profile. Please try again.');
+      setIsLoading(false);
+    }
+  };
+
+  const generateQuizFromSkills = async (userSkills = skills) => {
     try {
       setIsLoading(true);
       setError(null);
       
-      const category = getCategoryFromSkills(skills);
-      const topic = skills; // Use skills as the topic for more specific questions
+      const category = getCategoryFromSkills(userSkills);
+      const topic = userSkills; // Use skills as the topic for more specific questions
       
       const response = await quizAPI.generateQuiz({
         topic: topic,
@@ -247,19 +276,41 @@ const SkillTest = () => {
         <div style={{ textAlign: 'center', padding: '20px' }}>
           <div style={{ fontSize: '18px', marginBottom: '10px', color: '#e74c3c' }}>Error</div>
           <div style={{ fontSize: '14px', color: '#666', marginBottom: '20px' }}>{error}</div>
-          <button 
-            onClick={generateQuizFromSkills}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#3498db',
-              color: 'white',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer'
-            }}
-          >
-            Try Again
-          </button>
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+            <button 
+              onClick={() => {
+                setError(null);
+                if (skills) {
+                  generateQuizFromSkills();
+                } else {
+                  fetchUserSkills();
+                }
+              }}
+              style={{
+                padding: '10px 20px',
+                backgroundColor: '#3498db',
+                color: 'white',
+                border: 'none',
+                borderRadius: '5px',
+                cursor: 'pointer'
+              }}
+            >
+              Try Again
+            </button>
+            <button 
+              onClick={() => navigate('/onboarding')}
+              style={{
+                padding: '10px 20px',
+                backgroundColor: '#e74c3c',
+                color: 'white',
+                border: 'none',
+                borderRadius: '5px',
+                cursor: 'pointer'
+              }}
+            >
+              Complete Profile
+            </button>
+          </div>
         </div>
       </div>
     </div>

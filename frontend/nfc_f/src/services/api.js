@@ -121,4 +121,9 @@ export const supportAPI = {
   createSupport: (data) => api.post('/customer-support/', data),
 };
 
+// AI Mentor API calls
+export const aiMentorAPI = {
+  getResponse: (question) => api.post('/ai-mentor/', { question }),
+};
+
 export default api; 

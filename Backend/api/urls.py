@@ -19,10 +19,11 @@ router.register(r'referrals', views.ReferralViewSet)
 router.register(r'feedback', views.FeedBackViewSet)
 router.register(r'customer-support', views.CustomerSupportViewSet)
 router.register(r'system-logs', views.SystemLogViewSet)
+router.register(r'register', views.RegisterUserViewSet)
+
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('register/', views.RegisterUserView.as_view(), name='register'),
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]

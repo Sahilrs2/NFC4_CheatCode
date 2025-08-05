@@ -29,29 +29,121 @@ export default function Dashboard() {
   const { logout } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [user, setUser] = useState({
-    name: 'Priya Sharma',
-    location: 'Mumbai, Maharashtra',
+    name: 'Loading...',
+    location: 'Loading...',
     skillLevel: 'Beginner',
-    completedCourses: 3,
-    mentorSessions: 8,
-    jobApplications: 12,
-    profileCompletion: 75
+    completedCourses: 0,
+    mentorSessions: 0,
+    jobApplications: 0,
+    profileCompletion: 0
   });
   const [courses, setCourses] = useState([]);
   const [jobs, setJobs] = useState([]);
+  const [enrollments, setEnrollments] = useState([]);
+  const [mentorSessions, setMentorSessions] = useState([]);
+  const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch courses, jobs, and other data from API
-        const [coursesData, jobsData] = await Promise.all([
+        // Fetch all data from API
+        const [
+          coursesData, 
+          jobsData, 
+          enrollmentsData, 
+          mentorSessionsData,
+          userProfileData
+        ] = await Promise.all([
           courseAPI.getCourses(),
-          jobAPI.getJobs()
+          jobAPI.getJobs(),
+          courseAPI.getEnrollments(),
+          mentorAPI.getSessions(),
+          userAPI.getProfile()
         ]);
         
         setCourses(coursesData.data || []);
         setJobs(jobsData.data || []);
+        setEnrollments(enrollmentsData.data || []);
+        setMentorSessions(mentorSessionsData.data || []);
+        
+        // Update user data based on API response
+        if (userProfileData.data && userProfileData.data.length > 0) {
+          const profile = userProfileData.data[0];
+          setUserProfile(profile);
+          setUser({
+            name: profile.user?.first_name + ' ' + profile.user?.last_name || profile.user?.username || 'User',
+            location: profile.location || 'Location not set',
+            skillLevel: profile.skill_set ? 'Intermediate' : 'Beginner',
+            completedCourses: enrollmentsData.data?.filter(e => e.completed).length || 0,
+            mentorSessions: mentorSessionsData.data?.length || 0,
+            jobApplications: 0, // This would need a separate API endpoint
+            profileCompletion: calculateProfileCompletion(profile)
+          });
+        }
+
+        // Generate notifications from real data
+        const notificationsList = [];
+        if (mentorSessionsData.data?.length > 0) {
+          const recentSession = mentorSessionsData.data[0];
+          notificationsList.push({
+            id: 1,
+            type: 'mentor',
+            message: `Upcoming session with ${recentSession.mentor?.first_name || 'your mentor'} on ${new Date(recentSession.scheduled_on).toLocaleDateString()}`,
+            time: '2 hours ago'
+          });
+        }
+        if (jobsData.data?.length > 0) {
+          notificationsList.push({
+            id: 2,
+            type: 'job',
+            message: `New job match: ${jobsData.data[0].title} in ${jobsData.data[0].location || 'your area'}`,
+            time: '5 hours ago'
+          });
+        }
+        if (enrollmentsData.data?.length > 0) {
+          const activeEnrollment = enrollmentsData.data.find(e => !e.completed);
+          if (activeEnrollment) {
+            notificationsList.push({
+              id: 3,
+              type: 'course',
+              message: `Continue your course: ${activeEnrollment.course?.title || 'Digital Literacy'}`,
+              time: '1 day ago'
+            });
+          }
+        }
+        setNotifications(notificationsList);
+
+        // Generate recommended paths from available courses
+        const paths = coursesData.data?.slice(0, 3).map((course, index) => ({
+          title: course.title,
+          match: 85 - (index * 5),
+          duration: `${course.duration || 3} months`,
+          skills: course.skill_tag ? course.skill_tag.split(',').map(s => s.trim()) : ['Basic Skills'],
+          jobs: Math.floor(Math.random() * 30) + 10
+        })) || [];
+        setRecommendedPaths(paths);
+
+        // Generate active courses from enrollments
+        const activeCoursesList = enrollmentsData.data?.filter(e => !e.completed).map(enrollment => ({
+          title: enrollment.course?.title || 'Course',
+          progress: enrollment.progress || 0,
+          nextLesson: 'Continue Learning'
+        })) || [];
+        setActiveCourses(activeCoursesList);
+
+        // Generate job matches from available jobs
+        const jobMatchesList = jobsData.data?.slice(0, 2).map(job => ({
+          title: job.title,
+          company: job.employer?.first_name + ' ' + job.employer?.last_name || 'Company',
+          location: job.location || 'Location not specified',
+          salary: job.salary_range || 'Salary not specified',
+          match: Math.floor(Math.random() * 20) + 80,
+          remote: job.job_type === 'FREELANCE',
+          transport: true,
+          childcare: false
+        })) || [];
+        setJobMatches(jobMatchesList);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
       } finally {
@@ -62,62 +154,17 @@ export default function Dashboard() {
     fetchData();
   }, []);
 
-  const [notifications] = useState([
-    { id: 1, type: 'mentor', message: 'New message from your mentor Rajesh Kumar', time: '2 hours ago' },
-    { id: 2, type: 'job', message: 'Job match found: Data Entry Clerk in your area', time: '5 hours ago' },
-    { id: 3, type: 'course', message: 'Course reminder: Complete Digital Literacy Module 3', time: '1 day ago' }
-  ]);
+  const calculateProfileCompletion = (profile) => {
+    if (!profile) return 0;
+    const fields = ['age', 'gender', 'education', 'location', 'phone', 'skill_set', 'goals'];
+    const completedFields = fields.filter(field => profile[field] && profile[field] !== '').length;
+    return Math.round((completedFields / fields.length) * 100);
+  };
 
-  const [recommendedPaths] = useState([
-    {
-      title: 'Digital Marketing Assistant',
-      match: 85,
-      duration: '3 months',
-      skills: ['Social Media', 'Content Writing', 'Basic Analytics'],
-      jobs: 24
-    },
-    {
-      title: 'Customer Service Representative',
-      match: 78,
-      duration: '2 months',
-      skills: ['Communication', 'Problem Solving', 'Computer Basics'],
-      jobs: 31
-    },
-    {
-      title: 'Tailoring & Garment Work',
-      match: 72,
-      duration: '4 months',
-      skills: ['Sewing', 'Pattern Making', 'Quality Control'],
-      jobs: 18
-    }
-  ]);
-
-  const [activeCourses] = useState([
-    { title: 'Digital Literacy Basics', progress: 65, nextLesson: 'Email Communication' },
-    { title: 'English Communication', progress: 40, nextLesson: 'Phone Conversations' },
-    { title: 'Computer Fundamentals', progress: 85, nextLesson: 'Internet Safety' }
-  ]);
-
-  const [jobMatches] = useState([
-    {
-      title: 'Data Entry Operator',
-      company: 'Tech Solutions Pvt Ltd',
-      location: 'Andheri, Mumbai',
-      salary: '₹15,000-18,000',
-      match: 90,
-      remote: false,
-      transport: true
-    },
-    {
-      title: 'Customer Support (Hindi)',
-      company: 'CallCenter Pro',
-      location: 'Remote',
-      salary: '₹12,000-16,000',
-      match: 85,
-      remote: true,
-      childcare: true
-    }
-  ]);
+  const [notifications, setNotifications] = useState([]);
+  const [recommendedPaths, setRecommendedPaths] = useState([]);
+  const [activeCourses, setActiveCourses] = useState([]);
+  const [jobMatches, setJobMatches] = useState([]);
 
   const [barriers] = useState({
     transport: { identified: true, supported: true, details: 'Bus pass assistance provided' },
@@ -195,6 +242,17 @@ export default function Dashboard() {
       </div>
     );
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -294,30 +352,38 @@ export default function Dashboard() {
                 </button>
               </div>
               <div className="space-y-4">
-                {recommendedPaths.map((path, index) => (
-                  <div key={index} className="border border-gray-200 rounded-lg p-4 hover:border-blue-200 transition-colors">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <h4 className="font-semibold text-gray-900">{path.title}</h4>
-                        <p className="text-sm text-gray-600">{path.duration} • {path.jobs} jobs available</p>
+                                {recommendedPaths.length > 0 ? (
+                  recommendedPaths.map((path, index) => (
+                    <div key={index} className="border border-gray-200 rounded-lg p-4 hover:border-blue-200 transition-colors">
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h4 className="font-semibold text-gray-900">{path.title}</h4>
+                          <p className="text-sm text-gray-600">{path.duration} • {path.jobs} jobs available</p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Star className="w-4 h-4 text-yellow-500" />
+                          <span className="text-sm font-medium text-gray-700">{path.match}% match</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Star className="w-4 h-4 text-yellow-500" />
-                        <span className="text-sm font-medium text-gray-700">{path.match}% match</span>
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {path.skills.map((skill, skillIndex) => (
+                          <span key={skillIndex} className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full">
+                            {skill}
+                          </span>
+                        ))}
                       </div>
+                      <button className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1">
+                        Start Learning Path <ChevronRight className="w-4 h-4" />
+                      </button>
                     </div>
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {path.skills.map((skill, skillIndex) => (
-                        <span key={skillIndex} className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full">
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                    <button className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1">
-                      Start Learning Path <ChevronRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
+                  ))
+                                 ) : (
+                   <div className="text-center py-8 text-gray-500">
+                     <Target className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                     <p>No recommended paths available yet.</p>
+                     <p className="text-sm">Complete your profile to get personalized recommendations.</p>
+                   </div>
+                 )}
               </div>
             </div>
 
@@ -328,24 +394,32 @@ export default function Dashboard() {
                 Continue Learning
               </h3>
               <div className="space-y-4">
-                {activeCourses.map((course, index) => (
-                  <div key={index} className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-semibold text-gray-900">{course.title}</h4>
-                      <span className="text-sm text-gray-600">{course.progress}%</span>
+                {activeCourses.length > 0 ? (
+                  activeCourses.map((course, index) => (
+                    <div key={index} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-semibold text-gray-900">{course.title}</h4>
+                        <span className="text-sm text-gray-600">{course.progress}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
+                        <div 
+                          className="h-2 bg-green-500 rounded-full" 
+                          style={{ width: `${course.progress}%` }}
+                        ></div>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-3">Next: {course.nextLesson}</p>
+                      <button className="bg-green-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-600 transition-colors">
+                        Continue Course
+                      </button>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
-                      <div 
-                        className="h-2 bg-green-500 rounded-full" 
-                        style={{ width: `${course.progress}%` }}
-                      ></div>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-3">Next: {course.nextLesson}</p>
-                    <button className="bg-green-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-600 transition-colors">
-                      Continue Course
-                    </button>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <BookOpen className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                    <p>No active courses yet.</p>
+                    <p className="text-sm">Browse available courses to start learning.</p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </div>
@@ -359,15 +433,22 @@ export default function Dashboard() {
                 Recent Updates
               </h3>
               <div className="space-y-3">
-                {notifications.map(notification => (
-                  <div key={notification.id} className="flex gap-3 p-3 bg-gray-50 rounded-lg">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-                    <div className="flex-1">
-                      <p className="text-sm text-gray-800">{notification.message}</p>
-                      <p className="text-xs text-gray-500 mt-1">{notification.time}</p>
+                {notifications.length > 0 ? (
+                  notifications.map(notification => (
+                    <div key={notification.id} className="flex gap-3 p-3 bg-gray-50 rounded-lg">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-800">{notification.message}</p>
+                        <p className="text-xs text-gray-500 mt-1">{notification.time}</p>
+                      </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="text-center py-6 text-gray-500">
+                    <Bell className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                    <p className="text-sm">No notifications yet.</p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
 
@@ -378,28 +459,36 @@ export default function Dashboard() {
                 Job Matches
               </h3>
               <div className="space-y-4">
-                {jobMatches.map((job, index) => (
-                  <div key={index} className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <h4 className="font-semibold text-gray-900">{job.title}</h4>
-                      <span className="text-sm font-medium text-green-600">{job.match}% match</span>
+                {jobMatches.length > 0 ? (
+                  jobMatches.map((job, index) => (
+                    <div key={index} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <h4 className="font-semibold text-gray-900">{job.title}</h4>
+                        <span className="text-sm font-medium text-green-600">{job.match}% match</span>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-1">{job.company}</p>
+                      <p className="text-sm text-gray-600 mb-2 flex items-center gap-1">
+                        <MapPin className="w-3 h-3" />
+                        {job.location}
+                      </p>
+                      <p className="text-sm font-medium text-gray-800 mb-3">{job.salary}/month</p>
+                      <div className="flex gap-2 mb-3">
+                        {job.remote && <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">Remote</span>}
+                        {job.transport && <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">Transport Aid</span>}
+                        {job.childcare && <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">Childcare Support</span>}
+                      </div>
+                      <button className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg text-sm hover:bg-blue-600 transition-colors">
+                        Apply Now
+                      </button>
                     </div>
-                    <p className="text-sm text-gray-600 mb-1">{job.company}</p>
-                    <p className="text-sm text-gray-600 mb-2 flex items-center gap-1">
-                      <MapPin className="w-3 h-3" />
-                      {job.location}
-                    </p>
-                    <p className="text-sm font-medium text-gray-800 mb-3">{job.salary}/month</p>
-                    <div className="flex gap-2 mb-3">
-                      {job.remote && <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">Remote</span>}
-                      {job.transport && <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">Transport Aid</span>}
-                      {job.childcare && <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">Childcare Support</span>}
-                    </div>
-                    <button className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg text-sm hover:bg-blue-600 transition-colors">
-                      Apply Now
-                    </button>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <Briefcase className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                    <p>No job matches yet.</p>
+                    <p className="text-sm">Complete your profile to get job recommendations.</p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
 

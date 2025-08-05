@@ -6,7 +6,10 @@ import Signup from './pages/signup';
 import Roles from './pages/startup';
 import Dashboard from './pages/dashboard';
 import Onboarding from './pages/onboarding';
+import SkillTest from './pages/skilltest';
+import Chatbot from './pages/chatbot';
 export default function App() {
+  
   return (
     <Router>
       <Routes>
@@ -16,6 +19,8 @@ export default function App() {
         <Route path='/signup' element={<Signup/>}/>
         <Route path="/dashboard" element={<Dashboard/>}/>
         <Route path="/onboarding" element={<Onboarding/>}/>
+         <Route path="/chatbot" element={<Chatbot/>}/>
+        <Route path="/skilltest" element={<SkillTest/>}/>
     
       </Routes>
     </Router>

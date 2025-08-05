@@ -1,0 +1,113 @@
+.skilltest-bg {
+  min-height: 100vh;
+  min-width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0f6fb;
+  box-sizing: border-box;
+}
+
+.skilltest-centre-box {
+  background: #ffffff;
+  padding: 48px 48px 40px 48px;        /* More spacious */
+  border-radius: 38px;
+  box-shadow: 0 12px 44px rgba(22, 105, 122, 0.14);
+  width: 100%;
+  max-width: 540px;                    /* Increased width */
+  min-width: 340px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  margin: 32px 0;
+}
+
+.skilltest-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 18px;
+  font-weight: 700;
+  font-size: 1.38rem;
+  color: #143c53;
+}
+
+.skilltest-timer {
+  font-size: 1.12rem;
+  font-weight: 600;
+  color: #1b57b3;
+}
+
+.skilltest-question-count {
+  font-weight: 600;
+  margin-bottom: 13px;
+  font-size: 1.18rem;
+  color: #24657c;
+}
+
+.skilltest-question-text {
+  background: #eaf6fe;
+  padding: 20px 20px;
+  border-radius: 19px;
+  font-size: 1.21rem;
+  font-weight: 600;
+  margin-bottom: 22px;
+  color: #184159;
+  box-shadow: 0 2px 8px rgba(22, 105, 122, 0.04);
+}
+
+.skilltest-options {
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 22px;
+  display: flex;
+  flex-direction: column;
+}
+
+.skilltest-options li {
+  background: #f3f8fb;
+  margin-bottom: 13px;
+  padding: 15px 18px;
+  border-radius: 15px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  font-size: 1.07rem;
+  font-weight: 500;
+  transition: background 0.3s, border-color 0.3s, color 0.2s;
+  color: #17425a;
+}
+
+.skilltest-options li.selected {
+  background: #b0dafb;
+  border-color: #2d87f0;
+  font-weight: 700;
+}
+
+.skilltest-controls {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 25px;
+}
+
+.skilltest-controls button {
+  background-color: #4aacf6;
+  border: none;
+  padding: 13px 46px;
+  color: white;
+  border-radius: 40px;
+  font-size: 1.08rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.3s, box-shadow 0.2s;
+  min-width: 122px;
+  box-shadow: 0 2px 8px rgba(22, 105, 122, 0.10);
+}
+
+.skilltest-controls button:disabled {
+  background-color: #99c9ef;
+  cursor: default;
+}
+
+.skilltest-controls button:hover:not(:disabled) {
+  background-color: #1762b2;
+}

@@ -99,3 +99,30 @@ class RegisterUserSerializer(serializers.ModelSerializer):
             **profile_fields
         )
         return user
+
+class QuizSerializer(serializers.ModelSerializer):
+    created_by_username = serializers.CharField(source='created_by.username', read_only=True)
+    
+    class Meta:
+        model = Quiz
+        fields = '__all__'
+        read_only_fields = ['created_by', 'created_at']
+
+class QuizAttemptSerializer(serializers.ModelSerializer):
+    user_username = serializers.CharField(source='user.username', read_only=True)
+    quiz_title = serializers.CharField(source='quiz.title', read_only=True)
+    
+    class Meta:
+        model = QuizAttempt
+        fields = '__all__'
+        read_only_fields = ['user', 'started_at']
+
+class QuizGenerationRequestSerializer(serializers.Serializer):
+    topic = serializers.CharField(max_length=200, required=False)
+    category = serializers.ChoiceField(choices=Quiz.CATEGORY_CHOICES, default='GENERAL_KNOWLEDGE')
+    difficulty = serializers.ChoiceField(choices=Quiz.DIFFICULTY_CHOICES, default='MEDIUM')
+    num_questions = serializers.IntegerField(min_value=5, max_value=50, default=10)
+    title = serializers.CharField(max_length=200, required=False)
+    description = serializers.CharField(required=False)
+    time_limit = serializers.IntegerField(min_value=5, max_value=120, default=30)
+    passing_score = serializers.IntegerField(min_value=50, max_value=100, default=70)

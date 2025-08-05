@@ -521,9 +521,21 @@ export default function Dashboard() {
         <div className="mt-8 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <button className="flex flex-col items-center gap-2 p-4 border border-gray-200 rounded-lg hover:border-blue-200 hover:bg-blue-50 transition-colors">
+            <button 
+              className="flex flex-col items-center gap-2 p-4 border border-gray-200 rounded-lg hover:border-blue-200 hover:bg-blue-50 transition-colors"
+              onClick={() => {
+                const skills = userProfile?.skill_set || '';
+                if (skills) {
+                  navigate('/skilltest', { state: { skills: skills } });
+                } else {
+                  // If no skills are set, redirect to onboarding to set skills first
+                  alert('Please complete your profile and add your skills before taking the skill test.');
+                  navigate('/onboarding');
+                }
+              }}
+            >
               <Award className="w-6 h-6 text-blue-500" />
-              <span onClick={()=>{navigate('/skilltest')}} className="text-sm font-medium text-gray-700">Take Skills Test</span>
+              <span className="text-sm font-medium text-gray-700">Take Skills Test</span>
             </button>
             <button className="flex flex-col items-center gap-2 p-4 border border-gray-200 rounded-lg hover:border-green-200 hover:bg-green-50 transition-colors">
               <Users className="w-6 h-6 text-green-500" />

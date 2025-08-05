@@ -16,20 +16,20 @@ export default function Chatbot() {
   };
 
   return (
-    <div className="max-w-md mx-auto my-10 shadow-lg rounded-lg border border-gray-200">
-      <div className="bg-[#eaf5ff] p-4 rounded-t-lg flex items-center gap-2">
-        <div className="bg-blue-600 p-2 rounded-full text-white font-bold">💬</div>
+    <div className="max-w-4xl mx-auto my-10 shadow-lg rounded-lg border border-gray-200 min-h-screen flex flex-col justify-center">
+      <div className="bg-[#eaf5ff] p-6 rounded-t-lg flex items-center gap-3">
+        <div className="bg-blue-600 p-3 rounded-full text-white font-bold text-lg">💬</div>
         <div>
-          <div className="font-semibold text-blue-700">Career Advisor AI</div>
-          <div className="text-sm text-gray-600">Your personal guidance assistant</div>
+          <div className="font-semibold text-blue-700 text-lg">Career Advisor AI</div>
+          <div className="text-base text-gray-600">Your personal guidance assistant</div>
         </div>
       </div>
 
-      <div className="p-4 h-64 overflow-y-auto space-y-4 bg-white">
+      <div className="p-6 h-96 overflow-y-auto space-y-4 bg-white">
         {messages.map((msg, index) => (
           <div
             key={index}
-            className={`max-w-xs px-4 py-2 rounded-lg ${
+            className={`max-w-sm px-5 py-3 rounded-lg text-base ${
               msg.sender === "bot"
                 ? "bg-blue-100 text-blue-800 self-start"
                 : "bg-gray-200 text-gray-800 self-end ml-auto"
@@ -40,14 +40,15 @@ export default function Chatbot() {
         ))}
       </div>
 
-      <div className="flex p-4 border-t border-gray-200 bg-white rounded-b-lg">
+      <div className="flex p-6 border-t border-gray-200 bg-white rounded-b-lg">
         <input
           type="text"
-          className="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
+          className="flex-1 px-4 py-3 border-2 border-black rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-300 text-base"
           style={{
             backgroundColor: 'white',
             color: 'black',
-            fontSize: '14px'
+            fontSize: '16px',
+            border: '2px solid black'
           }}
           placeholder="Type a message..."
           value={input}
@@ -56,7 +57,7 @@ export default function Chatbot() {
         />
         <button
           onClick={handleSend}
-          className="bg-blue-600 text-white px-4 rounded-r-lg hover:bg-blue-700 transition-colors"
+          className="bg-blue-600 text-white px-6 py-3 rounded-r-lg hover:bg-blue-700 transition-colors text-base font-medium"
         >
           Send
         </button>

@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import './signin.css';
 
 const Login = () => {
-  const [role, setRole] = useState('USER');
+  const [role, setRole] = useState('LEARNER');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -38,7 +38,7 @@ const Login = () => {
         <h2>Sign In</h2>
 
         <select value={role} onChange={e => setRole(e.target.value)}>
-          <option value="USER">USER</option>
+          <option value="LEARNER">LEARNER</option>
           <option value="MENTOR">MENTOR</option>
           <option value="NGO">NGO</option>
         </select>

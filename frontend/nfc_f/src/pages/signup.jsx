@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import translations from "../assets/language";
 
 export default function Signup() {
@@ -15,8 +16,11 @@ export default function Signup() {
     photo: null
   });
   const [selectedRole, setSelectedRole] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const navigate = useNavigate();
+  const { register } = useAuth();
 
   useEffect(() => {
     const storedRole = localStorage.getItem("selectedRole");
@@ -37,9 +41,31 @@ export default function Signup() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert("Form submitted!");
+    setLoading(true);
+    setError("");
+    
+    try {
+      const userData = {
+        username: formData.email,
+        email: formData.email,
+        password: formData.password,
+        first_name: formData.name,
+        // Add other fields as needed based on your Django model
+      };
+      
+      const result = await register(userData);
+      if (result.success) {
+        navigate('/dashboard');
+      } else {
+        setError(result.error);
+      }
+    } catch (err) {
+      setError('An unexpected error occurred');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

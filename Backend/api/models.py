@@ -95,7 +95,7 @@ class mentorshipsession(models.Model):
     sector = models.CharField(max_length=100, null=True, blank=True)
     scheduled_on = models.DateTimeField(null=True, blank=True)
     status = models.CharField(max_length=10, choices=STATUS, default='PENDING')
-    
+    session_url = models.URLField(null=True,blank=True)
     def __str__(self):
         return f"Session between {self.mentor.user.username} and {self.mentee.user.username} on {self.scheduled_on.strftime('%Y-%m-%d %H:%M:%S')} - Status: {self.status}"
 

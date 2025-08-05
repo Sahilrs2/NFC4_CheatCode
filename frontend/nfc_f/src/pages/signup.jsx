@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import translations from "../assets/language";
 
 export default function Signup() {
@@ -15,8 +16,11 @@ export default function Signup() {
     photo: null
   });
   const [selectedRole, setSelectedRole] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const navigate = useNavigate();
+  const { register } = useAuth();
 
   useEffect(() => {
     const storedRole = localStorage.getItem("selectedRole");
@@ -37,9 +41,41 @@ export default function Signup() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert("Form submitted!");
+    setLoading(true);
+    setError("");
+    
+    try {
+      const userData = {
+        username: formData.email,
+        email: formData.email,
+        password: formData.password,
+        role: selectedRole.toLowerCase(),
+        phone: formData.phone,
+        gender: formData.gender,
+        location: formData.address,
+        language_preference: 'English', // Default language
+        age: 25 // Default age, you can add age field to form if needed
+      };
+      
+      const result = await register(userData);
+      if (result.success) {
+        navigate('/dashboard');
+      } else {
+        // Handle validation errors
+        if (typeof result.error === 'object') {
+          const errorMessages = Object.values(result.error).flat().join(', ');
+          setError(errorMessages);
+        } else {
+          setError(result.error);
+        }
+      }
+    } catch (err) {
+      setError('An unexpected error occurred');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -126,8 +162,9 @@ export default function Signup() {
           onChange={handleChange}
           style={styles.input}
         />
-        <button  type="submit" onClick={() => navigate('/dashboard') } style={styles.submitBtn}>
-          {t.submit}
+        {error && <div style={{ color: 'red', marginBottom: '1rem' }}>{error}</div>}
+        <button type="submit" disabled={loading} style={styles.submitBtn}>
+          {loading ? 'Creating Account...' : t.submit}
         </button>
         <p>
           {t.already} <a href="/login">Login</a>

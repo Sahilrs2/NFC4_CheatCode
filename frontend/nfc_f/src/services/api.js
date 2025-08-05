@@ -70,6 +70,7 @@ export const userAPI = {
   getProfile: () => api.get('/users/'),
   updateProfile: (data) => api.put(`/users/${data.id}/`, data),
   createProfile: (data) => api.post('/users/', data),
+  getCurrentUserProfile: () => api.get('/users/'), // This will get the current user's profile
 };
 
 // Course API calls

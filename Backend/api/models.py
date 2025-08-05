@@ -169,3 +169,53 @@ class system_logs(models.Model):
     details = models.TextField(null=True, blank=True)
     def __str__(self):
         return f"Log by {self.user.username if self.user else 'System'} - {self.action} at {self.timestamp.strftime('%Y-%m-%d %H:%M:%S')}"
+
+class Quiz(models.Model):
+    DIFFICULTY_CHOICES = [
+        ('EASY', 'Easy'),
+        ('MEDIUM', 'Medium'),
+        ('HARD', 'Hard')
+    ]
+    
+    CATEGORY_CHOICES = [
+        ('TECHNICAL', 'Technical'),
+        ('SOFT_SKILLS', 'Soft Skills'),
+        ('CAREER_GUIDANCE', 'Career Guidance'),
+        ('GENERAL_KNOWLEDGE', 'General Knowledge'),
+        ('PROGRAMMING', 'Programming'),
+        ('DIGITAL_MARKETING', 'Digital Marketing'),
+        ('DATA_SCIENCE', 'Data Science'),
+        ('BUSINESS', 'Business'),
+        ('DESIGN', 'Design'),
+        ('OTHER', 'Other')
+    ]
+    
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='OTHER')
+    difficulty = models.CharField(max_length=10, choices=DIFFICULTY_CHOICES, default='MEDIUM')
+    questions = models.JSONField()  # Store questions as JSON
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='quizzes_created')
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+    time_limit = models.PositiveIntegerField(default=30, help_text="Time limit in minutes")
+    passing_score = models.PositiveIntegerField(default=70, help_text="Passing score percentage")
+
+    def __str__(self):
+        return f"{self.title} - {self.category} - {self.difficulty}"
+
+class QuizAttempt(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='quiz_attempts')
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='attempts')
+    score = models.FloatField(null=True, blank=True)
+    answers = models.JSONField()  # Store user answers as JSON
+    started_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    is_completed = models.BooleanField(default=False)
+    passed = models.BooleanField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.quiz.title} - Score: {self.score}"
+
+    class Meta:
+        unique_together = ['user', 'quiz']

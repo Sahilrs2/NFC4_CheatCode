@@ -17,7 +17,18 @@ from .utils.quiz_generator import generate_quiz_questions, generate_quiz_by_cate
 from django.db.models import Q, Count, Avg
 from django.db import models
 from datetime import datetime, timedelta
-import uuid
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.response import Response
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.views import View
+import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Basic Viewsets
 class UserProfileViewSet(viewsets.ModelViewSet):
@@ -96,12 +107,9 @@ class JobPostingViewSet(viewsets.ModelViewSet):
             
         return queryset.order_by('-posted_on')
 
-
-
 class NGOViewSet(viewsets.ModelViewSet):
     queryset = NGO.objects.all()
     serializer_class = NGOProfileSerializer
-
 
 class ReferralViewSet(viewsets.ModelViewSet):
     queryset = Referral_services.objects.all()
@@ -602,3 +610,41 @@ class QuizSubmissionAPIView(APIView):
                 {"error": f"Failed to submit quiz: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def create_support_ticket(request):
+    try:
+        from .models import customer_support
+        
+        # Validate required fields
+        required_fields = ['name', 'email', 'subject', 'message', 'category']
+        data = request.data
+        
+        for field in required_fields:
+            if not data.get(field):
+                return Response({
+                    'error': f'{field} is required'
+                }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Create support ticket
+        ticket = customer_support.objects.create(
+            name=data['name'],
+            email=data['email'],
+            phone=data.get('phone', ''),
+            subject=data['subject'],
+            message=data['message'],
+            category=data['category']
+        )
+        
+        return Response({
+            'message': 'Support ticket created successfully',
+            'ticket_id': ticket.id
+        }, status=status.HTTP_201_CREATED)
+        
+    except Exception as e:
+        logger.error(f"Support Ticket Error: {str(e)}")
+        return Response({
+            'error': 'Failed to create support ticket'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

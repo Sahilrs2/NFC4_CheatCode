@@ -17,7 +17,6 @@ router.register(r'job-postings', views.JobPostingViewSet)
 router.register(r'ngos', views.NGOViewSet)  
 router.register(r'referrals', views.ReferralViewSet)
 router.register(r'feedback', views.FeedBackViewSet)
-router.register(r'customer-support', views.CustomerSupportViewSet)
 router.register(r'system-logs', views.SystemLogViewSet)
 router.register(r'register', views.RegisterUserViewSet)
 router.register(r'quizzes', views.QuizViewSet)
@@ -32,5 +31,6 @@ urlpatterns = [
     path('login/', views.login_user, name='login_user'),
     path('ai-mentor/',views.GeminiCareerMentorAPIView.as_view(),name='ai-mentor'),
     path('generate-quiz/', views.AIQuizGenerationAPIView.as_view(), name='generate-quiz'),
-    path('submit-quiz/<int:quiz_id>/', views.QuizSubmissionAPIView.as_view(), name='submit-quiz')
+    path('submit-quiz/<int:quiz_id>/', views.QuizSubmissionAPIView.as_view(), name='submit-quiz'),
+    path('customer-support/', views.create_support_ticket, name='create_support_ticket'),
 ]

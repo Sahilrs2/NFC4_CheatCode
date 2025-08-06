@@ -28,6 +28,7 @@ export default function App() {
           <Route path="/contactus" element={<ContactUs/>} />
           <Route path="/login" element={<Login />} />
           <Route path="/roles" element={<Roles/>}/>
+          <Route path="/chatbot" element={<Chatbot/>} />
           <Route path='/signup' element={<Signup/>}/>
           <Route path="/dashboard" element={
             <ProtectedRoute>

@@ -11,31 +11,24 @@ import Onboarding from './pages/onboarding';
 
 import SkillTest from './pages/skilltest';
 import Chatbot from './pages/chatbot';
+import Modular from './pages/modular';
+import ContactUs from './pages/contactus';
 
 export default function App() {
   
-  return (
+  return (<>
 
-    <Router>
-      <Routes>
-        <Route path="/" element={<SplashScreen />} />
-        <Route path="/login" element={<Login />} />
-        <Route path ="/roles" element={<Roles/>}/>
-        <Route path='/signup' element={<Signup/>}/>
-        <Route path="/dashboard" element={<Dashboard/>}/>
-        <Route path="/onboarding" element={<Onboarding/>}/>
-         <Route path="/chatbot" element={<Chatbot/>}/>
-        <Route path="/skilltest" element={<SkillTest/>}/>
-    
-      </Routes>
-    </Router>
-
-    <AuthProvider>
+      <AuthProvider>
       <Router>
         <Routes>
+
           <Route path="/" element={<SplashScreen />} />
+          <Route path="/skilltest" element={<SkillTest />} />
+          <Route path="/modular" element={<Modular/>} />
+          <Route path="/contactus" element={<ContactUs/>} />
           <Route path="/login" element={<Login />} />
           <Route path="/roles" element={<Roles/>}/>
+          <Route path="/chatbot" element={<Chatbot/>} />
           <Route path='/signup' element={<Signup/>}/>
           <Route path="/dashboard" element={
             <ProtectedRoute>
@@ -50,6 +43,8 @@ export default function App() {
         </Routes>
       </Router>
     </AuthProvider>
+
+    </>
 
   );
 }

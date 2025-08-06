@@ -126,10 +126,42 @@ class Command(BaseCommand):
                 rating=random.randint(3, 5)
             )
 
+        # Create sample customer support tickets
+        support_categories = ['general', 'technical', 'course', 'job', 'mentor']
+        support_statuses = ['pending', 'in_progress', 'resolved', 'closed']
+        support_priorities = ['low', 'medium', 'high']
+        
+        sample_names = ['John Doe', 'Jane Smith', 'Mike Johnson', 'Sarah Wilson', 'David Brown']
+        sample_subjects = [
+            'Need help with course enrollment',
+            'Technical issue with platform',
+            'Job application assistance',
+            'Mentorship program inquiry',
+            'General platform questions',
+            'Payment and billing issues',
+            'Account access problems',
+            'Course completion certificate'
+        ]
+        
+        for i in range(10):
+            customer_support.objects.create(
+                name=random.choice(sample_names),
+                email=f'support{i+1}@example.com',
+                phone=f'+91 98765{random.randint(10000, 99999)}',
+                subject=random.choice(sample_subjects),
+                message=f'This is a sample support ticket #{i+1}. User is experiencing issues and needs assistance.',
+                category=random.choice(support_categories),
+                status=random.choice(support_statuses),
+                priority=random.choice(support_priorities),
+                assigned_to=random.choice(users) if random.choice([True, False]) else None,
+                created_at=timezone.now() - timedelta(days=random.randint(0, 30))
+            )
+
         self.stdout.write(
             self.style.SUCCESS('Successfully created sample data!')
         )
         self.stdout.write(f'Created {len(users)} users')
         self.stdout.write(f'Created {len(courses)} courses')
         self.stdout.write(f'Created {JobPosting.objects.count()} job postings')
-        self.stdout.write(f'Created {mentorshipsession.objects.count()} mentorship sessions') 
+        self.stdout.write(f'Created {mentorshipsession.objects.count()} mentorship sessions')
+        self.stdout.write(f'Created {customer_support.objects.count()} support tickets') 

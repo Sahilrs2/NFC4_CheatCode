@@ -154,13 +154,49 @@ class Feedback(models.Model):
         return f"Feedback from {self.user.username} - Rating: {self.rating}"
     
 class customer_support(models.Model):
-    username = models.CharField(max_length=500,null=True,blank=True)
-    mail = models.CharField(max_length=500,null=True,blank=True)
-    query = models.TextField()
+    CATEGORY_CHOICES = [
+        ('general', 'General Inquiry'),
+        ('technical', 'Technical Support'),
+        ('course', 'Course Related'),
+        ('job', 'Job Assistance'),
+        ('mentor', 'Mentorship')
+    ]
+    
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('in_progress', 'In Progress'),
+        ('resolved', 'Resolved'),
+        ('closed', 'Closed')
+    ]
+    
+    # Form fields
+    name = models.CharField(max_length=200, help_text="Full name of the person")
+    email = models.EmailField(help_text="Email address for contact")
+    phone = models.CharField(max_length=20, null=True, blank=True, help_text="Phone number")
+    subject = models.CharField(max_length=200, help_text="Subject of the inquiry")
+    message = models.TextField(help_text="Detailed message")
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='general')
+    
+    # Support tracking
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_support_tickets')
+    priority = models.CharField(max_length=10, choices=[('low', 'Low'), ('medium', 'Medium'), ('high', 'High')], default='medium')
+    
+    # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    resolved_at = models.DateTimeField(null=True, blank=True)
+    
+    # Legacy fields for backward compatibility
+    username = models.CharField(max_length=500, null=True, blank=True)
+    mail = models.CharField(max_length=500, null=True, blank=True)
+    query = models.TextField(null=True, blank=True)
 
     def __str__(self):
-        return f"Support query from {self.username} - {self.mail}"
+        return f"Support ticket from {self.name} - {self.subject} ({self.status})"
+    
+    class Meta:
+        ordering = ['-created_at']
     
 class system_logs(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)

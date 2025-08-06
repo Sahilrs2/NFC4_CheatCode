@@ -55,9 +55,56 @@ class FeedbackSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class CustomerSupportSerializer(serializers.ModelSerializer):
+    category_display = serializers.CharField(source='get_category_display', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    priority_display = serializers.CharField(source='get_priority_display', read_only=True)
+    assigned_to_username = serializers.CharField(source='assigned_to.username', read_only=True)
+    
     class Meta:
         model = customer_support
-        fields = '__all__'
+        fields = [
+            'id', 'name', 'email', 'phone', 'subject', 'message', 'category', 
+            'category_display', 'status', 'status_display', 'priority', 'priority_display',
+            'assigned_to', 'assigned_to_username', 'created_at', 'updated_at', 'resolved_at',
+            # Legacy fields
+            'username', 'mail', 'query'
+        ]
+        read_only_fields = ['status', 'assigned_to', 'created_at', 'updated_at', 'resolved_at']
+    
+    def validate_email(self, value):
+        """Validate email format"""
+        if not value:
+            raise serializers.ValidationError("Email is required")
+        return value
+    
+    def validate_name(self, value):
+        """Validate name is not empty"""
+        if not value or not value.strip():
+            raise serializers.ValidationError("Name is required")
+        return value.strip()
+    
+    def validate_subject(self, value):
+        """Validate subject is not empty"""
+        if not value or not value.strip():
+            raise serializers.ValidationError("Subject is required")
+        return value.strip()
+    
+    def validate_message(self, value):
+        """Validate message is not empty"""
+        if not value or not value.strip():
+            raise serializers.ValidationError("Message is required")
+        return value.strip()
+    
+    def create(self, validated_data):
+        """Create a new support ticket"""
+        # Set default priority based on category
+        if 'priority' not in validated_data:
+            if validated_data.get('category') in ['technical', 'job']:
+                validated_data['priority'] = 'high'
+            else:
+                validated_data['priority'] = 'medium'
+        
+        return super().create(validated_data)
 
 class SystemLogsSerializer(serializers.ModelSerializer):
     class Meta:

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
+// import { useAuth } from '../context/AuthContext'; // Temporarily commented out
 import { courseAPI, userAPI, mentorAPI, jobAPI } from '../services/api';
 
 import { 
@@ -28,12 +28,11 @@ import {
 import { useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
-  const navigate=useNavigate()
-    const [activeTab, setActiveTab] = useState('overview');
-  const [user] = useState({
-    name: 'Priya Sharma',
-    location: 'Mumbai, Maharashtra',
-  const { logout } = useAuth();
+  const navigate = useNavigate();
+  // const { logout } = useAuth(); // Temporarily commented out
+  const logout = () => console.log('Logout clicked'); // Temporary logout function
+  
+  // Fixed: Removed duplicate activeTab declaration and hardcoded user data
   const [activeTab, setActiveTab] = useState('overview');
   const [user, setUser] = useState({
     name: 'Loading...',
@@ -44,12 +43,26 @@ export default function Dashboard() {
     jobApplications: 0,
     profileCompletion: 0
   });
+  
   const [courses, setCourses] = useState([]);
   const [jobs, setJobs] = useState([]);
   const [enrollments, setEnrollments] = useState([]);
   const [mentorSessions, setMentorSessions] = useState([]);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // Fixed: Moved these state declarations before useEffect
+  const [notifications, setNotifications] = useState([]);
+  const [recommendedPaths, setRecommendedPaths] = useState([]);
+  const [activeCourses, setActiveCourses] = useState([]);
+  const [jobMatches, setJobMatches] = useState([]);
+
+  const [barriers] = useState({
+    transport: { identified: true, supported: true, details: 'Bus pass assistance provided' },
+    childcare: { identified: true, supported: false, details: 'Need daycare support during training' },
+    digital: { identified: false, supported: true, details: 'Smartphone training completed' },
+    language: { identified: true, supported: true, details: 'Hindi interface activated' }
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -74,12 +87,25 @@ export default function Dashboard() {
         setEnrollments(enrollmentsData.data || []);
         setMentorSessions(mentorSessionsData.data || []);
         
-        // Update user data based on API response
+        // Update user data based on API response - Fixed name construction
         if (userProfileData.data && userProfileData.data.length > 0) {
           const profile = userProfileData.data[0];
           setUserProfile(profile);
+          
+          // Fixed: Better name handling with fallbacks
+          let userName = 'User';
+          if (profile.user?.first_name && profile.user?.last_name) {
+            userName = `${profile.user.first_name} ${profile.user.last_name}`;
+          } else if (profile.user?.first_name) {
+            userName = profile.user.first_name;
+          } else if (profile.user?.last_name) {
+            userName = profile.user.last_name;
+          } else if (profile.user?.username) {
+            userName = profile.user.username;
+          }
+          
           setUser({
-            name: profile.user?.first_name + ' ' + profile.user?.last_name || profile.user?.username || 'User',
+            name: userName,
             location: profile.location || 'Location not set',
             skillLevel: profile.skill_set ? 'Intermediate' : 'Beginner',
             completedCourses: enrollmentsData.data?.filter(e => e.completed).length || 0,
@@ -140,19 +166,38 @@ export default function Dashboard() {
         setActiveCourses(activeCoursesList);
 
         // Generate job matches from available jobs
-        const jobMatchesList = jobsData.data?.slice(0, 2).map(job => ({
-          title: job.title,
-          company: job.employer?.first_name + ' ' + job.employer?.last_name || 'Company',
-          location: job.location || 'Location not specified',
-          salary: job.salary_range || 'Salary not specified',
-          match: Math.floor(Math.random() * 20) + 80,
-          remote: job.job_type === 'FREELANCE',
-          transport: true,
-          childcare: false
-        })) || [];
+        const jobMatchesList = jobsData.data?.slice(0, 2).map(job => {
+          let companyName = 'Company';
+          if (job.employer?.first_name && job.employer?.last_name) {
+            companyName = `${job.employer.first_name} ${job.employer.last_name}`;
+          } else if (job.employer?.first_name) {
+            companyName = job.employer.first_name;
+          } else if (job.employer?.last_name) {
+            companyName = job.employer.last_name;
+          } else if (job.employer?.username) {
+            companyName = job.employer.username;
+          }
+          
+          return {
+            title: job.title,
+            company: companyName,
+            location: job.location || 'Location not specified',
+            salary: job.salary_range || 'Salary not specified',
+            match: Math.floor(Math.random() * 20) + 80,
+            remote: job.job_type === 'FREELANCE',
+            transport: true,
+            childcare: false
+          };
+        }) || [];
         setJobMatches(jobMatchesList);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
+        // Set user to a default state if API fails
+        setUser(prevUser => ({
+          ...prevUser,
+          name: 'User',
+          location: 'Location not available'
+        }));
       } finally {
         setLoading(false);
       }
@@ -167,18 +212,6 @@ export default function Dashboard() {
     const completedFields = fields.filter(field => profile[field] && profile[field] !== '').length;
     return Math.round((completedFields / fields.length) * 100);
   };
-
-  const [notifications, setNotifications] = useState([]);
-  const [recommendedPaths, setRecommendedPaths] = useState([]);
-  const [activeCourses, setActiveCourses] = useState([]);
-  const [jobMatches, setJobMatches] = useState([]);
-
-  const [barriers] = useState({
-    transport: { identified: true, supported: true, details: 'Bus pass assistance provided' },
-    childcare: { identified: true, supported: false, details: 'Need daycare support during training' },
-    digital: { identified: false, supported: true, details: 'Smartphone training completed' },
-    language: { identified: true, supported: true, details: 'Hindi interface activated' }
-  });
 
   const CareerAdvisorChat = () => (
     <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-6 rounded-xl border border-blue-200">
@@ -197,13 +230,17 @@ export default function Dashboard() {
         </p>
         <p className="text-xs text-gray-500">AI Advisor • Just now</p>
       </div>
-      <button onClick={()=>{navigate('/chatbot')}} className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">
+      <button 
+        onClick={() => navigate('/chatbot')} 
+        className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors"
+      >
         Chat with Advisor
       </button>
     </div>
   );
 
   const ProgressCard = ({ title, value, max, color, icon: Icon }) => (
+    
     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
       <div className="flex items-center justify-between mb-3">
         <div className={`w-12 h-12 ${color} rounded-lg flex items-center justify-center`}>
@@ -359,7 +396,7 @@ export default function Dashboard() {
                 </button>
               </div>
               <div className="space-y-4">
-                                {recommendedPaths.length > 0 ? (
+                {recommendedPaths.length > 0 ? (
                   recommendedPaths.map((path, index) => (
                     <div key={index} className="border border-gray-200 rounded-lg p-4 hover:border-blue-200 transition-colors">
                       <div className="flex items-start justify-between mb-3">
@@ -384,49 +421,27 @@ export default function Dashboard() {
                       </button>
                     </div>
                   ))
-                                 ) : (
-                   <div className="text-center py-8 text-gray-500">
-                     <Target className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                     <p>No recommended paths available yet.</p>
-                     <p className="text-sm">Complete your profile to get personalized recommendations.</p>
-                   </div>
-                 )}
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <Target className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                    <p>No recommended paths available yet.</p>
+                    <p className="text-sm">Complete your profile to get personalized recommendations.</p>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Active Courses */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
                 <BookOpen className="w-5 h-5 text-green-500" />
-                Continue Learning
+                Recommended Courses
               </h3>
               <div className="space-y-4">
-                {activeCourses.length > 0 ? (
-                  activeCourses.map((course, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="font-semibold text-gray-900">{course.title}</h4>
-                        <span className="text-sm text-gray-600">{course.progress}%</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
-                        <div 
-                          className="h-2 bg-green-500 rounded-full" 
-                          style={{ width: `${course.progress}%` }}
-                        ></div>
-                      </div>
-                      <p className="text-sm text-gray-600 mb-3">Next: {course.nextLesson}</p>
-                      <button className="bg-green-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-600 transition-colors">
-                        Continue Course
-                      </button>
-                    </div>
-                  ))
-                ) : (
                   <div className="text-center py-8 text-gray-500">
                     <BookOpen className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                    <p>No active courses yet.</p>
-                    <p className="text-sm">Browse available courses to start learning.</p>
+                    <p>Recommendation not found</p>
+                    <button onClick={()=>{navigate('/modular')}} className='bg-blue-500 mt-2 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors'>View more Courses</button>
                   </div>
-                )}
               </div>
             </div>
           </div>
@@ -522,17 +537,8 @@ export default function Dashboard() {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <button 
+              onClick={() => navigate('/skilltest')}
               className="flex flex-col items-center gap-2 p-4 border border-gray-200 rounded-lg hover:border-blue-200 hover:bg-blue-50 transition-colors"
-              onClick={() => {
-                const skills = userProfile?.skill_set || '';
-                if (skills) {
-                  navigate('/skilltest', { state: { skills: skills } });
-                } else {
-                  // If no skills are set, redirect to onboarding to set skills first
-                  alert('Please complete your profile and add your skills before taking the skill test.');
-                  navigate('/onboarding');
-                }
-              }}
             >
               <Award className="w-6 h-6 text-blue-500" />
               <span className="text-sm font-medium text-gray-700">Take Skills Test</span>
@@ -545,7 +551,7 @@ export default function Dashboard() {
               <Calendar className="w-6 h-6 text-purple-500" />
               <span className="text-sm font-medium text-gray-700">Schedule Session</span>
             </button>
-            <button className="flex flex-col items-center gap-2 p-4 border border-gray-200 rounded-lg hover:border-orange-200 hover:bg-orange-50 transition-colors">
+            <button className="flex flex-col items-center gap-2 p-4 border border-gray-200 rounded-lg hover:border-orange-200 hover:bg-orange-50 transition-colors" onClick={() => navigate('/contactus')}>
               <Phone className="w-6 h-6 text-orange-500" />
               <span className="text-sm font-medium text-gray-700">Get Help</span>
             </button>
